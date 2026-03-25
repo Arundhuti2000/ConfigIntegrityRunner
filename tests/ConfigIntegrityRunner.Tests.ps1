@@ -1,17 +1,18 @@
 #Requires -Version 7.0
-#Requires -Modules @{ ModuleName = 'Pester'; ModuleVersion = '3.4.0' }
 
-$modulePath = Join-Path $PSScriptRoot '../src/ConfigIntegrityRunner.psm1'
-Import-Module $modulePath -Force
+BeforeAll {
+    $modulePath = Join-Path $PSScriptRoot '../src/ConfigIntegrityRunner.psm1'
+    Import-Module $modulePath -Force
 
-# Helper: build a minimal PSCustomObject from a hashtable
-function New-PSObj {
-    param([hashtable]$h)
-    $obj = [PSCustomObject]@{}
-    foreach ($kv in $h.GetEnumerator()) {
-        $obj | Add-Member -NotePropertyName $kv.Key -NotePropertyValue $kv.Value
+    # Helper: build a minimal PSCustomObject from a hashtable
+    function New-PSObj {
+        param([hashtable]$h)
+        $obj = [PSCustomObject]@{}
+        foreach ($kv in $h.GetEnumerator()) {
+            $obj | Add-Member -NotePropertyName $kv.Key -NotePropertyValue $kv.Value
+        }
+        return $obj
     }
-    return $obj
 }
 
 Describe 'Compare-ResourceChecks' {
@@ -21,7 +22,7 @@ Describe 'Compare-ResourceChecks' {
             $actual  = New-PSObj @{ vm_size = 'Standard_D2s_v3'; https_only = $true }
 
             $result = Compare-ResourceChecks -Desired $desired -Actual $actual
-            $result.Count | Should Be 0
+            $result.Count | Should -Be 0
         }
     }
 
@@ -31,10 +32,10 @@ Describe 'Compare-ResourceChecks' {
             $actual  = New-PSObj @{ vm_size = 'Standard_B2s' }
 
             $result = Compare-ResourceChecks -Desired $desired -Actual $actual
-            $result.Count | Should Be 1
-            $result[0].DriftType | Should Be 'ValueMismatch'
-            $result[0].ExpectedValue | Should Be 'Standard_D2s_v3'
-            $result[0].ActualValue | Should Be 'Standard_B2s'
+            $result.Count | Should -Be 1
+            $result[0].DriftType | Should -Be 'ValueMismatch'
+            $result[0].ExpectedValue | Should -Be 'Standard_D2s_v3'
+            $result[0].ActualValue | Should -Be 'Standard_B2s'
         }
     }
 
@@ -48,8 +49,8 @@ Describe 'Compare-ResourceChecks' {
             }
 
             $result = Compare-ResourceChecks -Desired $desired -Actual $actual
-            $result.Count | Should Be 1
-            $result[0].CheckPath | Should Be 'tags.Env'
+            $result.Count | Should -Be 1
+            $result[0].CheckPath | Should -Be 'tags.Env'
         }
     }
 
@@ -59,8 +60,8 @@ Describe 'Compare-ResourceChecks' {
             $actual  = New-PSObj @{ other = 'val2' }
 
             $result = Compare-ResourceChecks -Desired $desired -Actual $actual
-            $result.Count | Should Be 1
-            $result[0].DriftType | Should Be 'MissingProperty'
+            $result.Count | Should -Be 1
+            $result[0].DriftType | Should -Be 'MissingProperty'
         }
     }
 }
@@ -77,8 +78,8 @@ Describe 'Get-IntegrityScore' {
             })
 
             $score = Get-IntegrityScore -Results $results
-            $score.Score | Should Be 100.0
-            $score.Grade | Should Be 'A'
+            $score.Score | Should -Be 100.0
+            $score.Grade | Should -Be 'A'
         }
 
         It 'Calculates 0% score for a total failure' {
@@ -91,8 +92,8 @@ Describe 'Get-IntegrityScore' {
             })
 
             $score = Get-IntegrityScore -Results $results
-            $score.Score | Should Be 0.0
-            $score.Grade | Should Be 'F'
+            $score.Score | Should -Be 0.0
+            $score.Grade | Should -Be 'F'
         }
 
         It 'Calculates partial credit for partial drift' {
@@ -108,8 +109,8 @@ Describe 'Get-IntegrityScore' {
             # Score = 80.0
 
             $score = Get-IntegrityScore -Results $results
-            $score.Score | Should Be 80.0
-            $score.Grade | Should Be 'C' 
+            $score.Score | Should -Be 80.0
+            $score.Grade | Should -Be 'C' 
         }
         
         It 'Applies severity multipliers correctly' {
@@ -133,7 +134,7 @@ Describe 'Get-IntegrityScore' {
             })
 
             $score = Get-IntegrityScore -Results $results
-            $score.Score | Should Be 75.0
+            $score.Score | Should -Be 75.0
         }
     }
 }
