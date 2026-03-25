@@ -65,14 +65,14 @@ function Compare-ResourceChecks {
         Returns a list of drift items.
     #>
     [CmdletBinding()]
-    [OutputType([System.Collections.Generic.List[PSCustomObject]])]
+    [OutputType([System.Collections.Generic.List[psobject]])]
     param(
-        [Parameter(Mandatory)] [PSCustomObject]$Desired,
-        [Parameter(Mandatory)] [PSCustomObject]$Actual,
+        [Parameter(Mandatory)] [psobject]$Desired,
+        [Parameter(Mandatory)] [psobject]$Actual,
         [string]$PathPrefix = ''
     )
 
-    $driftItems = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $driftItems = [System.Collections.Generic.List[psobject]]::new()
 
     foreach ($property in $Desired.PSObject.Properties) {
         $key        = $property.Name
@@ -149,7 +149,7 @@ function Invoke-ConfigIntegrityCheck {
 
     $runId    = [System.Guid]::NewGuid().ToString()
     $runStart = Get-Date -Format 'o'
-    $results  = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $results  = [System.Collections.Generic.List[psobject]]::new()
 
     # Build a lookup map of actual resources by name for O(1) access
     $actualLookup = @{}
@@ -267,7 +267,7 @@ function Get-IntegrityScore {
     [OutputType([PSCustomObject])]
     param(
         [Parameter(Mandatory)]
-        [System.Collections.Generic.List[PSCustomObject]]$Results
+        [System.Collections.Generic.List[psobject]]$Results
     )
 
     $severityMultiplier = @{
@@ -466,7 +466,7 @@ function ConvertTo-ServiceNowPayload {
         u_snapshot_time   = $RunResult.RunMetadata.SnapshotTime
     }
 
-    $driftRecords = [System.Collections.Generic.List[PSCustomObject]]::new()
+    $driftRecords = [System.Collections.Generic.List[psobject]]::new()
 
     foreach ($result in $RunResult.Results) {
         if ($result.Status -in @('DRIFT', 'MISSING')) {

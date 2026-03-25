@@ -68,7 +68,7 @@ Describe 'Compare-ResourceChecks' {
 Describe 'Get-IntegrityScore' {
     Context 'Scoring logic' {
         It 'Calculates 100% score for a perfect run' {
-            $results = [System.Collections.Generic.List[PSCustomObject]]::new()
+            $results = [System.Collections.Generic.List[psobject]]::new()
             $results.Add([PSCustomObject]@{
                 Status     = 'PASS'
                 Severity   = 'High'
@@ -82,7 +82,7 @@ Describe 'Get-IntegrityScore' {
         }
 
         It 'Calculates 0% score for a total failure' {
-            $results = [System.Collections.Generic.List[PSCustomObject]]::new()
+            $results = [System.Collections.Generic.List[psobject]]::new()
             $results.Add([PSCustomObject]@{
                 Status     = 'MISSING'
                 Severity   = 'Medium'
@@ -96,7 +96,7 @@ Describe 'Get-IntegrityScore' {
         }
 
         It 'Calculates partial credit for partial drift' {
-            $results = [System.Collections.Generic.List[PSCustomObject]]::new()
+            $results = [System.Collections.Generic.List[psobject]]::new()
             $results.Add([PSCustomObject]@{
                 Status     = 'DRIFT'
                 Severity   = 'Low'
@@ -118,7 +118,7 @@ Describe 'Get-IntegrityScore' {
             # Low: 1 check, Fail. Points = 1 * 1 = 1. Earned = 0.
             # Total Points = 4. Earned = 3. Score = 75%.
             
-            $results = [System.Collections.Generic.List[PSCustomObject]]::new()
+            $results = [System.Collections.Generic.List[psobject]]::new()
             $results.Add([PSCustomObject]@{
                 Status     = 'PASS'
                 Severity   = 'Critical'
