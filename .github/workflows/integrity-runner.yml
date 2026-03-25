@@ -1,0 +1,187 @@
+name: Config Integrity Runner
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run nightly at 02:00 UTC to catch environment drift between deployments
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      pass_threshold:
+        description: "Minimum integrity score to pass (0-100)"
+        required: false
+        default: "80"
+      fail_on_critical:
+        description: "Fail if any Critical resource has drift"
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write # Required for OIDC login to Azure
+  checks: write # Required to publish Pester test results
+
+jobs:
+  unit-tests:
+    name: Pester Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PowerShell
+        # ubuntu-latest ships with pwsh; this step upgrades to latest stable
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y powershell
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name Pester -MinimumVersion 5.0 -Force -Scope CurrentUser
+
+      - name: Run Pester Tests
+        shell: pwsh
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path           = './tests'
+          $config.Output.Verbosity   = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'test-results/pester-results.xml'
+          $config.TestResult.OutputFormat = 'NUnitXml'
+          $config.CodeCoverage.Enabled = $true
+          $config.CodeCoverage.Path    = './src/ConfigIntegrityRunner.psm1'
+
+          New-Item -ItemType Directory -Path test-results -Force | Out-Null
+          $result = Invoke-Pester -Configuration $config
+
+          # Surface the pass/fail in the workflow
+          if ($result.FailedCount -gt 0) {
+            Write-Host "::error::$($result.FailedCount) Pester test(s) failed."
+            exit 1
+          }
+          Write-Host "All $($result.PassedCount) tests passed."
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Pester Results
+          path: test-results/pester-results.xml
+          reporter: java-junit
+
+      - name: Upload Test Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pester-results
+          path: test-results/
+
+  # JOB 2: Drift Detection (uses sample data in CI;swap actual-state path for live Az output in prod)
+
+  integrity-check:
+    name: Configuration Integrity Check
+    runs-on: ubuntu-latest
+    needs: unit-tests # Only run if tests pass
+
+    env:
+      PASS_THRESHOLD: ${{ github.event.inputs.pass_threshold || '80' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y powershell
+
+      # ── PRODUCTION PATH (uncomment when wired to real Azure) ──────────
+      # - name: Azure Login (OIDC)
+      #   uses: azure/login@v2
+      #   with:
+      #     client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+      #     tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #
+      # - name: Collect Actual State from Azure
+      #   shell: pwsh
+      #   run: ./scripts/Get-AzureActualState.ps1 -OutputPath ./actual-state-live.json
+      #   # This script uses Az.Compute, Az.Network, Az.Storage etc. to
+      #   # build the actual-state JSON dynamically from the live environment.
+      # ──────────────────────────────────────────────────────────────────
+
+      - name: Run Integrity Check
+        id: integrity
+        shell: pwsh
+        run: |
+          $threshold     = [double]$env:PASS_THRESHOLD
+          $failCritical  = '${{ github.event.inputs.fail_on_critical }}' -eq 'true'
+
+          $params = @{
+            DesiredStatePath   = './sample-data/desired-state.json'
+            ActualStatePath    = './sample-data/actual-state.json'
+            OutputPath         = './integrity-output/report.json'
+            PassThreshold      = $threshold
+          }
+          if ($failCritical) { $params['FailOnCriticalDrift'] = $true }
+
+          New-Item -ItemType Directory -Path integrity-output -Force | Out-Null
+          & ./Invoke-IntegrityRunner.ps1 @params
+
+          # Parse score for downstream step output
+          $report = Get-Content './integrity-output/report.json' | ConvertFrom-Json
+          "score=$($report.Score)"   >> $env:GITHUB_OUTPUT
+          "grade=$($report.Grade)"   >> $env:GITHUB_OUTPUT
+          "drifted=$($report.Summary.Drifted)"  >> $env:GITHUB_OUTPUT
+          "critical=$($report.Summary.CriticalDrift)" >> $env:GITHUB_OUTPUT
+
+      - name: Annotate PR with Integrity Score
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const score    = '${{ steps.integrity.outputs.score }}';
+            const grade    = '${{ steps.integrity.outputs.grade }}';
+            const drifted  = '${{ steps.integrity.outputs.drifted }}';
+            const critical = '${{ steps.integrity.outputs.critical }}';
+
+            const emoji = grade === 'A' ? '✅' : grade === 'B' ? '🟡' : '🔴';
+            const body  = `## ${emoji} Config Integrity Report\n\n` +
+                          `| Metric | Value |\n|--------|-------|\n` +
+                          `| Score  | **${score}/100** |\n` +
+                          `| Grade  | **${grade}** |\n` +
+                          `| Drifted Resources | ${drifted} |\n` +
+                          `| Critical Drift | ${critical} |\n\n` +
+                          `_See the \`integrity-report\` artifact for full details._`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Upload Integrity Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integrity-report
+          path: integrity-output/
+
+      # ── OPTIONAL: Push to ServiceNow via REST ─────────────────────────
+      # - name: Push Drift to ServiceNow
+      #   if: always()
+      #   shell: pwsh
+      #   env:
+      #     SNOW_INSTANCE: ${{ secrets.SERVICENOW_INSTANCE }}
+      #     SNOW_USER:     ${{ secrets.SERVICENOW_USER }}
+      #     SNOW_PASS:     ${{ secrets.SERVICENOW_PASSWORD }}
+      #   run: ./scripts/Push-ToServiceNow.ps1 -PayloadPath ./integrity-output/servicenow-payload.json
+      # ──────────────────────────────────────────────────────────────────

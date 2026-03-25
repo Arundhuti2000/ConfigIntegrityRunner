@@ -1,0 +1,96 @@
+{
+  "RunRecord": {
+    "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+    "u_run_timestamp": "2026-03-25T12:23:06.2475243-04:00",
+    "u_environment": "production",
+    "u_score": 80.2,
+    "u_grade": "C",
+    "u_total_rules": 5,
+    "u_passed": 2,
+    "u_drifted": 3,
+    "u_missing": 0,
+    "u_critical_drift": 2,
+    "u_pass_rate": 40.0,
+    "u_snapshot_time": "2025-03-25T10:30:00Z"
+  },
+  "DriftRecords": [
+    {
+      "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+      "u_rule_id": "VM-002",
+      "u_resource_name": "vm-prod-api-01",
+      "u_category": "VirtualMachine",
+      "u_severity": "Critical",
+      "u_status": "DRIFT",
+      "u_check_path": "vm_size",
+      "u_expected_value": "Standard_D4s_v3",
+      "u_actual_value": "Standard_B2s",
+      "u_drift_type": "ValueMismatch",
+      "u_remediation_hint": "Resize VM and tag per standards policy"
+    },
+    {
+      "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+      "u_rule_id": "VM-002",
+      "u_resource_name": "vm-prod-api-01",
+      "u_category": "VirtualMachine",
+      "u_severity": "Critical",
+      "u_status": "DRIFT",
+      "u_check_path": "os_disk_type",
+      "u_expected_value": "Premium_LRS",
+      "u_actual_value": "Standard_LRS",
+      "u_drift_type": "ValueMismatch",
+      "u_remediation_hint": "Resize VM and tag per standards policy"
+    },
+    {
+      "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+      "u_rule_id": "VM-002",
+      "u_resource_name": "vm-prod-api-01",
+      "u_category": "VirtualMachine",
+      "u_severity": "Critical",
+      "u_status": "DRIFT",
+      "u_check_path": "tags.CostCenter",
+      "u_expected_value": "CC-1002",
+      "u_actual_value": "<MISSING>",
+      "u_drift_type": "MissingProperty",
+      "u_remediation_hint": "Resize VM and tag per standards policy"
+    },
+    {
+      "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+      "u_rule_id": "VM-002",
+      "u_resource_name": "vm-prod-api-01",
+      "u_category": "VirtualMachine",
+      "u_severity": "Critical",
+      "u_status": "DRIFT",
+      "u_check_path": "diagnostics_enabled",
+      "u_expected_value": true,
+      "u_actual_value": false,
+      "u_drift_type": "ValueMismatch",
+      "u_remediation_hint": "Resize VM and tag per standards policy"
+    },
+    {
+      "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+      "u_rule_id": "NSG-001",
+      "u_resource_name": "nsg-prod-web",
+      "u_category": "NetworkSecurityGroup",
+      "u_severity": "Critical",
+      "u_status": "DRIFT",
+      "u_check_path": "allow_rdp_from_internet",
+      "u_expected_value": false,
+      "u_actual_value": true,
+      "u_drift_type": "ValueMismatch",
+      "u_remediation_hint": "Remove inbound RDP/SSH rules allowing source 0.0.0.0/0 or Internet"
+    },
+    {
+      "u_run_id": "30442e12-7651-44ea-be8f-6de98712c7e5",
+      "u_rule_id": "SA-001",
+      "u_resource_name": "stprodapp001",
+      "u_category": "StorageAccount",
+      "u_severity": "High",
+      "u_status": "DRIFT",
+      "u_check_path": "min_tls_version",
+      "u_expected_value": "TLS1_2",
+      "u_actual_value": "TLS1_1",
+      "u_drift_type": "ValueMismatch",
+      "u_remediation_hint": "Enforce HTTPS, disable public blob access, set TLS 1.2 minimum"
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "snapshot_timestamp": "2025-03-25T10:30:00Z",
+  "subscription_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "environment": "production",
+  "resources": [
+    {
+      "resource_name": "vm-prod-web-01",
+      "category": "VirtualMachine",
+      "actual": {
+        "vm_size": "Standard_D2s_v3",
+        "os_disk_type": "Premium_LRS",
+        "tags": {
+          "Environment": "Production",
+          "Owner": "platform-team",
+          "CostCenter": "CC-1001"
+        },
+        "diagnostics_enabled": true,
+        "availability_set": "as-prod-web"
+      }
+    },
+    {
+      "resource_name": "vm-prod-api-01",
+      "category": "VirtualMachine",
+      "actual": {
+        "vm_size": "Standard_B2s",
+        "os_disk_type": "Standard_LRS",
+        "tags": {
+          "Environment": "Production",
+          "Owner": "api-team"
+        },
+        "diagnostics_enabled": false,
+        "availability_set": "as-prod-api"
+      }
+    },
+    {
+      "resource_name": "nsg-prod-web",
+      "category": "NetworkSecurityGroup",
+      "actual": {
+        "allow_rdp_from_internet": true,
+        "allow_ssh_from_internet": false,
+        "tags": {
+          "Environment": "Production",
+          "Owner": "network-team"
+        }
+      }
+    },
+    {
+      "resource_name": "stprodapp001",
+      "category": "StorageAccount",
+      "actual": {
+        "sku": "Standard_GRS",
+        "https_only": true,
+        "min_tls_version": "TLS1_1",
+        "public_blob_access": false,
+        "tags": {
+          "Environment": "Production",
+          "Owner": "platform-team",
+          "CostCenter": "CC-1001"
+        }
+      }
+    },
+    {
+      "resource_name": "kv-prod-secrets",
+      "category": "KeyVault",
+      "actual": {
+        "soft_delete_enabled": true,
+        "purge_protection_enabled": true,
+        "public_network_access": "Disabled",
+        "tags": {
+          "Environment": "Production",
+          "Owner": "security-team",
+          "CostCenter": "CC-1003"
+        }
+      }
+    }
+  ]
+}

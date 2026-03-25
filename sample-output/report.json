@@ -1,0 +1,122 @@
+{
+  "RunId": "a4f6c41c-4b93-4711-80f4-430331955d1b",
+  "RunTimestamp": "2026-03-25T12:15:50.0706299-04:00",
+  "Environment": "production",
+  "Results": [
+    {
+      "RuleId": "VM-001",
+      "ResourceName": "vm-prod-web-01",
+      "Category": "VirtualMachine",
+      "Severity": "Critical",
+      "Status": "PASS",
+      "DriftItems": [],
+      "DriftCount": 0,
+      "CheckCount": 7,
+      "RemediationHint": "Resize VM via Az portal or Set-AzVM; ensure tags via Set-AzResource",
+      "Notes": ""
+    },
+    {
+      "RuleId": "VM-002",
+      "ResourceName": "vm-prod-api-01",
+      "Category": "VirtualMachine",
+      "Severity": "Critical",
+      "Status": "DRIFT",
+      "DriftItems": [
+        {
+          "CheckPath": "vm_size",
+          "ExpectedValue": "Standard_D4s_v3",
+          "ActualValue": "Standard_B2s",
+          "DriftType": "ValueMismatch"
+        },
+        {
+          "CheckPath": "os_disk_type",
+          "ExpectedValue": "Premium_LRS",
+          "ActualValue": "Standard_LRS",
+          "DriftType": "ValueMismatch"
+        },
+        {
+          "CheckPath": "tags.CostCenter",
+          "ExpectedValue": "CC-1002",
+          "ActualValue": "<MISSING>",
+          "DriftType": "MissingProperty"
+        },
+        {
+          "CheckPath": "diagnostics_enabled",
+          "ExpectedValue": true,
+          "ActualValue": false,
+          "DriftType": "ValueMismatch"
+        }
+      ],
+      "DriftCount": 4,
+      "CheckCount": 7,
+      "RemediationHint": "Resize VM and tag per standards policy",
+      "Notes": ""
+    },
+    {
+      "RuleId": "NSG-001",
+      "ResourceName": "nsg-prod-web",
+      "Category": "NetworkSecurityGroup",
+      "Severity": "Critical",
+      "Status": "DRIFT",
+      "DriftItems": [
+        {
+          "CheckPath": "allow_rdp_from_internet",
+          "ExpectedValue": false,
+          "ActualValue": true,
+          "DriftType": "ValueMismatch"
+        }
+      ],
+      "DriftCount": 1,
+      "CheckCount": 4,
+      "RemediationHint": "Remove inbound RDP/SSH rules allowing source 0.0.0.0/0 or Internet",
+      "Notes": ""
+    },
+    {
+      "RuleId": "SA-001",
+      "ResourceName": "stprodapp001",
+      "Category": "StorageAccount",
+      "Severity": "High",
+      "Status": "DRIFT",
+      "DriftItems": [
+        {
+          "CheckPath": "min_tls_version",
+          "ExpectedValue": "TLS1_2",
+          "ActualValue": "TLS1_1",
+          "DriftType": "ValueMismatch"
+        }
+      ],
+      "DriftCount": 1,
+      "CheckCount": 7,
+      "RemediationHint": "Enforce HTTPS, disable public blob access, set TLS 1.2 minimum",
+      "Notes": ""
+    },
+    {
+      "RuleId": "KV-001",
+      "ResourceName": "kv-prod-secrets",
+      "Category": "KeyVault",
+      "Severity": "Critical",
+      "Status": "PASS",
+      "DriftItems": [],
+      "DriftCount": 0,
+      "CheckCount": 6,
+      "RemediationHint": "Enable soft delete, purge protection, and disable public network access",
+      "Notes": ""
+    }
+  ],
+  "Summary": {
+    "TotalRules": 5,
+    "Passed": 2,
+    "Drifted": 3,
+    "Missing": 0,
+    "CriticalDrift": 2,
+    "PassRate": 40.0
+  },
+  "Score": 80.2,
+  "Grade": "C",
+  "RunMetadata": {
+    "DesiredStatePath": "d:\\Personal_Projects\\Loop\\ConfigIntegrityRunner\\sample-data\\desired-state.json",
+    "ActualStatePath": "d:\\Personal_Projects\\Loop\\ConfigIntegrityRunner\\sample-data\\actual-state.json",
+    "SchemaVersion": "1.0",
+    "SnapshotTime": "2025-03-25T10:30:00Z"
+  }
+}

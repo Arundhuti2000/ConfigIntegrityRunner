@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "environment": "production",
+  "rules": [
+    {
+      "rule_id": "VM-001",
+      "category": "VirtualMachine",
+      "resource_name": "vm-prod-web-01",
+      "checks": {
+        "vm_size": "Standard_D2s_v3",
+        "os_disk_type": "Premium_LRS",
+        "tags": {
+          "Environment": "Production",
+          "Owner": "platform-team",
+          "CostCenter": "CC-1001"
+        },
+        "diagnostics_enabled": true,
+        "availability_set": "as-prod-web"
+      },
+      "severity": "Critical",
+      "remediation_hint": "Resize VM via Az portal or Set-AzVM; ensure tags via Set-AzResource"
+    },
+    {
+      "rule_id": "VM-002",
+      "category": "VirtualMachine",
+      "resource_name": "vm-prod-api-01",
+      "checks": {
+        "vm_size": "Standard_D4s_v3",
+        "os_disk_type": "Premium_LRS",
+        "tags": {
+          "Environment": "Production",
+          "Owner": "api-team",
+          "CostCenter": "CC-1002"
+        },
+        "diagnostics_enabled": true,
+        "availability_set": "as-prod-api"
+      },
+      "severity": "Critical",
+      "remediation_hint": "Resize VM and tag per standards policy"
+    },
+    {
+      "rule_id": "NSG-001",
+      "category": "NetworkSecurityGroup",
+      "resource_name": "nsg-prod-web",
+      "checks": {
+        "allow_rdp_from_internet": false,
+        "allow_ssh_from_internet": false,
+        "tags": {
+          "Environment": "Production",
+          "Owner": "network-team"
+        }
+      },
+      "severity": "Critical",
+      "remediation_hint": "Remove inbound RDP/SSH rules allowing source 0.0.0.0/0 or Internet"
+    },
+    {
+      "rule_id": "SA-001",
+      "category": "StorageAccount",
+      "resource_name": "stprodapp001",
+      "checks": {
+        "sku": "Standard_GRS",
+        "https_only": true,
+        "min_tls_version": "TLS1_2",
+        "public_blob_access": false,
+        "tags": {
+          "Environment": "Production",
+          "Owner": "platform-team",
+          "CostCenter": "CC-1001"
+        }
+      },
+      "severity": "High",
+      "remediation_hint": "Enforce HTTPS, disable public blob access, set TLS 1.2 minimum"
+    },
+    {
+      "rule_id": "KV-001",
+      "category": "KeyVault",
+      "resource_name": "kv-prod-secrets",
+      "checks": {
+        "soft_delete_enabled": true,
+        "purge_protection_enabled": true,
+        "public_network_access": "Disabled",
+        "tags": {
+          "Environment": "Production",
+          "Owner": "security-team",
+          "CostCenter": "CC-1003"
+        }
+      },
+      "severity": "Critical",
+      "remediation_hint": "Enable soft delete, purge protection, and disable public network access"
+    }
+  ]
+}
