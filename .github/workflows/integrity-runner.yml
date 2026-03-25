@@ -54,7 +54,7 @@ jobs:
           $config.Output.Verbosity   = 'Detailed'
           $config.TestResult.Enabled = $true
           $config.TestResult.OutputPath = 'test-results/pester-results.xml'
-          $config.TestResult.OutputFormat = 'NUnitXml'
+          $config.TestResult.OutputFormat = 'JUnitXml'
           $config.CodeCoverage.Enabled = $true
           $config.CodeCoverage.Path    = './src/ConfigIntegrityRunner.psm1'
 
